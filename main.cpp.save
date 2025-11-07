@@ -12,6 +12,7 @@ using namespace std;
 struct PasswordResult
 {
     string password;
+    double entropie;
     string laSuggestion;
 };
 
@@ -110,7 +111,7 @@ string generatePasswordOption(int length, bool useLower, bool useUpper, bool use
 
     if (charset.empty())
     {
-        return "Erreur : Veuillez choisir un type de caractère pour la génération";
+        return "Erreur : Veuillez choisir au moins un type de caractère pour la génération";
     }
 
     uniform_int_distribution<> dist(0, charset.size()-1);
@@ -138,91 +139,111 @@ string generatePasswordOption(int length, bool useLower, bool useUpper, bool use
 
 // Fonction pour la génération finale
 
-PasswordResult generation()
+vector<PasswordResult> generation(int const nbreDePassword )
 {
     int length;
     char lower, upper, digits, symbols, choice;
-    PasswordResult result;
+    vector<PasswordResult> results;
 
     cout << "Je préfère choisir moi même (o/n): ";
     cin >> choice;
 
     if (choice == 'o' || choice == 'O')
     {
-        do
+        for (int i = 0; i<nbreDePassword; ++i)
         {
-            cout << "Longueur du mot de passe que vous voulez générer: ";
-            cin >> length;
-        } while (length <= 0);
+            do
+            {
+                cout << "Longueur du mot de passe que vous voulez générer: ";
+                cin >> length;
+            } while (length <= 0);
 
-        do
-        {
-            cout << "Inclure des lettres miniscules ? (o/n) : ";
-            cin>> lower;
-        } while (lower !='o' && lower != 'O' && lower != 'n' && lower != 'N');
+            do
+            {
+                cout << "Inclure des lettres miniscules ? (o/n) : ";
+                cin>> lower;
+            } while (lower !='o' && lower != 'O' && lower != 'n' && lower != 'N');
 
-        do
-        {
-            cout << "Inclure des lettres majuscules ? (o/n) : ";
-            cin >> upper;
-        }while (upper !='o' && upper != 'O' && upper != 'n' && upper != 'N');
+            do
+            {
+                cout << "Inclure des lettres majuscules ? (o/n) : ";
+                cin >> upper;
+            }while (upper !='o' && upper != 'O' && upper != 'n' && upper != 'N');
 
-        do
-        {
-            cout << "Inclure des chiffres ? (o/n) : ";
-            cin >> digits;
-        }while (digits !='o' && digits != 'O' && digits != 'n' && digits != 'N');
+            do
+            {
+                cout << "Inclure des chiffres ? (o/n) : ";
+                cin >> digits;
+            }while (digits !='o' && digits != 'O' && digits != 'n' && digits != 'N');
 
-        do
-        {
-             cout << "Inclure des symboles ? (o/n) : ";
-             cin >> symbols;
-        }while (symbols !='o' && symbols != 'O' && symbols != 'n' && symbols != 'N');
+            do
+            {
+                cout << "Inclure des symboles ? (o/n) : ";
+                cin >> symbols;
+            }while (symbols !='o' && symbols != 'O' && symbols != 'n' && symbols != 'N');
 
-         result.password = generatePasswordOption(
-            length,
-            lower == 'o' || lower == 'O',
-            upper == 'o' || upper == 'O',
-            digits == 'o' || digits == 'O',
-            symbols == 'o' || symbols == 'O'
-        );
+            if ((lower == 'n' || lower == 'N') && (upper == 'n' || upper == 'N') && (digits == 'n' || digits == 'N') && (symbols == 'n' || symbols == 'N') )
+            {
+                cout << "Erreur : Veuillez choisir au moins un type de caractère pour continuer la génération" << endl;
+                int nbreDePasswordcontinue = nbreDePassword;
+                return generation(nbreDePasswordcontinue);
+            }
+            else
+            {
+                PasswordResult result;
+                result.password = generatePasswordOption(
+                    length,
+                    lower == 'o' || lower == 'O',
+                    upper == 'o' || upper == 'O',
+                    digits == 'o' || digits == 'O',
+                    symbols == 'o' || symbols == 'O'
+                );
 
-        // Pour l'évaluation de la robustesse
-        int charSize;
-        if (lower == 'o' || lower == 'O')
-            charSize += 26;
-        if (upper == 'o' || upper == 'O')
-            charSize += 26;
-        if (digits == 'o' || digits == 'O')
-            charSize += 10;
-        if (symbols == 'o' || symbols == 'O')
-            charSize += 28;
+                // Pour l'évaluation de la robustesse
+                int charSize;
+                if (lower == 'o' || lower == 'O')
+                    charSize += 26;
+                if (upper == 'o' || upper == 'O')
+                    charSize += 26;
+                if (digits == 'o' || digits == 'O')
+                    charSize += 10;
+                if (symbols == 'o' || symbols == 'O')
+                    charSize += 28;
 
-        double entropy = calculateEntropy(length, charSize);
-        result.laSuggestion = suggestion(entropy);
+                result.entropie = calculateEntropy(length, charSize);
+                result.laSuggestion = suggestion(result.entropie);
+                results.push_back(result);
+                return results;
+            }
+        }
 
-       return result;
     }
     else if (choice == 'n' || choice == 'N')
     {
-        do
+        for (int i = 0; i < nbreDePassword; ++i)
         {
-            cout << "Longueur du mot de passe que vous voulez générer: ";
-            cin >> length;
-        } while (length <= 0);
+            PasswordResult result;
 
-        result.password = generatePassword(length);
+            do
+            {
+                cout << "Longueur du mot de passe que vous voulez générer: ";
+                cin >> length;
+            } while (length <= 0);
 
-        int charsetSize = 26+26+10+26;
-        double entropie = calculateEntropy(length, charsetSize);
-        result.laSuggestion = suggestion(entropie);
+            result.password = generatePassword(length);
 
-        return result;
+            int charsetSize = 26+26+10+26;
+            result.entropie = calculateEntropy(length, charsetSize);
+            result.laSuggestion = suggestion(result.entropie);
+            results.push_back(result);
+        }
+
+        return results;
     }
     else
     {
         cout << "Vous devez entrer 'o' ou 'n'" << endl;
-        return generation(); // Capture le mot de passe pour retourner le password générer
+        return generation(nbreDePassword); // Capture le mot de passe pour retourner le password générer
     }
 }
 
@@ -236,12 +257,60 @@ int main()
     cout << "Bienvenu dans le générateur de mot de passe" << endl;
     cout << endl;
 
-    cout << "Avant de continuer souhaitez-vous choisir les caractères qui seront inclus dans votre mot de passe généré ou préférez-vous qu'on le fasse à votre place ?";
-    cout << endl;
-    PasswordResult result = generation();
+    int choice;
 
-    cout << "Mot de passe généré : " << result.password << endl;
+    while (choice != 3)
+    {
+        cout << "\n===MENU===\n";
+        cout << "1. Générer un mot de passe.\n";
+        cout << "2. Générer plusieurs mots de passe\n";
+        cout << "3. Quitter le programme\n";
+        cout << endl;
+        cout << "Votre choix : ";
+        cin >> choice;
 
-    cout << result.laSuggestion << endl;
+        switch (choice)
+        {
+            case 1 :
+                {
+                    cout << "Avant de continuer souhaitez-vous choisir les caractères qui seront inclus dans votre mot de passe généré ou préférez-vous qu'on le fasse à votre place ?";
+                    cout << endl;
+                    vector <PasswordResult> results = generation(1); // Génère le mot de passe une fois
+                    cout << "Mot de passe généré : " << results[0].password << endl;
+                    cout << results[0].laSuggestion << endl;
+                    cout << endl
+                    break;
+                }
+
+            case 2 :
+                {
+                    int nbreDePassword;
+
+                    cout << "Combien de mots de passe voulez-vous générer aujourd'hui ? " << endl;
+                    cin >> nbreDePassword;
+
+                    cout << "Avant de continuer souhaitez-vous choisir les caractères qui seront inclus dans votre mot de passe généré ou préférez-vous qu'on le fasse à votre place ?";
+                    cout << endl;
+                    vector <PasswordResult> results = generation(nbreDePassword);
+
+                    for (int i =0; i < results.size(); ++i)
+                        {
+                            cout << "Mot de passe généré N°#" << (i+1) << " : " << results[i].password << endl;
+
+                            cout << results[i].laSuggestion << endl;
+                        }
+                    break;
+                }
+
+            case 3 :
+                {
+                    cout << "Au revoir !"; << endl;
+                    break;
+                }
+            default:
+                cout << "Choix invalide. Veuillez réessayer." << endl;
+        }
+    }
+
     return 0;
 }
