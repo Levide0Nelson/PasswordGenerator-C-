@@ -1,0 +1,22 @@
+# Fichiers compilés
+*.exe
+*.o
+*.obj
+
+# Fichiers de Code::Blocks
+*.layout
+*.depend
+*.cbp.save
+
+# Dossiers de build
+/bin/
+/obj/
+/Debug/
+/Release/
+
+# Fichiers système
+*.log
+*.tmp
+*.bak
+.DS_Store
+Thumbs.db
