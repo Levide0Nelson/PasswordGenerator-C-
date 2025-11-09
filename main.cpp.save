@@ -248,26 +248,52 @@ vector<PasswordResult> generation(int const nbreDePassword )
     }
 }
 
-// Fonction pour la création du fichier de sauvagarde des mots de passe générés (en cas de besoin)
+// Fonction pour la création du fichier de sauvagarde des mots de passe générés (en cas de besoin) avec horodatage uniquement
 void savePassword (const string& password, int index)
 {
     ofstream fichier("passwords_Save.txt", ios::app); //mode ajout sans écrasement des données à l'ouverture du fichier de sauvegarde
 
     if (fichier.is_open())
     {
-        fichier << "Mot de passe #"<< index << " : " << password << endl;
+        // Obtention de la date et de l'heure courante
+        time_t heure_courante = time(nullptr);
+        char horodatage[100];
+        strftime(horodatage, sizeof(horodatage), "%Y-%m-%d %H:%M:%S", localtime(&heure_courante));
+
+        // Ecriture dans le fichier
+        fichier << "Mot de passe #"<< index << " : " << password << " [" << horodatage << "]\n";
         fichier.close();
         cout << "Mot(s) de passe sauvegardé(s) automatiquement avec succès.";
     }
     else
         cerr << "Erreur : Impossible d'ouvrir le fichier de sauvegarde. Une erreur a dû se produire.\n";
 }
- 
+
+// Fonction pour création d'un fichier de sauvegarde avec horodatage et contexte d'utilisation du mot de passe généré par l'utilisateur
+void savePasswordWithContextAndTime(const string& password, const string& usingContext, int index)
+{
+    ofstream fichier("password_Saved_Context_and_Time.txt", ios::app);
+    if (fichier.is_open())
+    {
+        // Obtention de l'heure et de la date courante
+        time_t heureCourante = time(nullptr);
+        char horodatage[100];
+        strftime(horodatage, sizeof(horodatage), "%d-%m-%Y  %H:%M:%S", localtime(&heureCourante));
+
+        // Ecriture dans le fichier de sauvegarde
+        fichier << "Mot de passe #" << index << " : " << password << "\n";
+        fichier << "Créé le : " << horodatage << "\n";
+        fichier <<  "Contexte de création : " << usingContext << "\n";
+        fichier.close();
+    }
+    else
+        cerr << "Impossible d'ouvrir le ficher de sauvegarde. Une erreur a dû se produire.\n";
+}
 
 // Fonction pour l'affichage de l'historique des mots de passe sauvegardés dans le fichier de sauvegarde
 void showPasswordSaved()
 {
-    ifstream fichier ("passwords_Save.txt");
+    ifstream fichier ("password_Saved_Context_and_Time.txt");
     if (fichier.is_open())
     {
         string ligne;
@@ -284,7 +310,7 @@ void showPasswordSaved()
     }
 }
 
-// Fonction pour suppression du fichier d'historique des mots de passe générés 
+// Fonction pour suppression du fichier d'historique des mots de passe générés
 void deletePasswordSaved()
 {
     char confirmation;
@@ -293,7 +319,7 @@ void deletePasswordSaved()
 
     if (confirmation == 'o' || confirmation == 'O')
     {
-        ofstream fichier ("passwords_Save.txt", ios::trunc);  // ouverture du fichier de sauvegarde en mode écrasement
+        ofstream fichier ("password_Saved_Context_and_Time.txt", ios::trunc);  // ouverture du fichier de sauvegarde en mode écrasement
         if (fichier.is_open())
         {
             fichier.close();
@@ -319,6 +345,7 @@ int main()
     cout << endl;
 
     int choice;
+    string usingContext;
 
     while (choice != 5)
     {
@@ -343,27 +370,44 @@ int main()
                     cout << results[0].laSuggestion << endl;
                     cout << endl;
                     static int i = 0;
+
                     char saveChoice;
                         cout << "Voulez- vous sauvegarder le mot de passe généré (o/n)? : ";
                         cin >> saveChoice;
+                        cin.ignore();
                         if (saveChoice == 'o' || saveChoice == 'O')
                         {
                             savePassword(results[0].password, i+1);
+                            cout << "Où comptez-vous utiliser ce mot de passe ? \n";
+                            cout << "Donner une description claire pour vous en souvenir plus tard. Nous la sauvegarderont dans votre historique : " << endl;
+                            getline(cin, usingContext);
+                            savePasswordWithContextAndTime(results[0].password, usingContext, i+1);
                         }
                         else if (saveChoice == 'n' || saveChoice == 'N')
                         {
                              cout <<" Votre mot de passe ne sera pas sauvegardé. Vous ne pourrez plus avoir accès à lui en cas de besoin"<<endl;
                              cout << "Êtes-vous sûr de ne pas vouloir sauvegarder le mot de passe (o/n) ? : ";
                              cin >> saveChoice;
+                             cin.ignore();
                              if (saveChoice == 'o' || saveChoice == 'O')
                              {
                                  cout << "Sauvegarde non effectuée.";
                              }
                              else if (saveChoice == 'n' || saveChoice == 'N')
-                                    savePassword(results[0].password, i+1);
+                             {
+                                 savePassword(results[0].password, i+1);
+                                 cout << "Où comptez-vous utiliser ce mot de passe ? \n";
+                                 cout << "Donner une description claire pour vous en souvenir plus tard. Nous la sauvegarderont dans votre historique : " << endl;
+                                 getline(cin, usingContext);
+                                 savePasswordWithContextAndTime(results[0].password, usingContext, i+1);
+                             }
                              else
                              {
                                  savePassword(results[0].password, i+1);
+                                 cout << "Où comptez-vous utiliser ce mot de passe ? \n";
+                                 cout << "Donner une description claire pour vous en souvenir plus tard. Nous la sauvegarderont dans votre historique : " << endl;
+                                 getline(cin, usingContext);
+                                 savePasswordWithContextAndTime(results[0].password, usingContext, i+1);
                                  cout << "Une erreur s'est produite : Vous devez entrer 'o' ou 'n'" << endl;
                                  cout << "Les mots de passe ont été sauvegarder pour éviter tout risque. Vous pouver vider l'historique dans le menu\n";
                              }
@@ -371,6 +415,10 @@ int main()
                         else
                         {
                             savePassword(results[0].password, i+1);
+                            cout << "Où comptez-vous utiliser ce mot de passe ? \n";
+                            cout << "Donner une description claire pour vous en souvenir plus tard. Nous la sauvegarderont dans votre historique : " << endl;
+                            getline(cin, usingContext);
+                            savePasswordWithContextAndTime(results[0].password, usingContext, i+1);
                             cout << "Une erreur s'est produite : Vous devez entrer 'o' ou 'n'" << endl;
                             cout << "Les mots de passe ont été sauvegarder pour éviter tout risque. Vous pouver vider l'historique dans le menu\n";
                         }
@@ -383,7 +431,7 @@ int main()
 
                     cout << "Combien de mots de passe voulez-vous générer aujourd'hui ? " << endl;
                     cin >> nbreDePassword;
-
+                    cin.ignore();  // pour vider le buffer
                     cout << "Avant de continuer souhaitez-vous choisir les caractères qui seront inclus dans votre mot de passe généré ou préférez-vous qu'on le fasse à votre place ?";
                     cout << endl;
                     vector <PasswordResult> results = generation(nbreDePassword);
@@ -398,16 +446,25 @@ int main()
                     char saveChoice;
                     cout << "Voulez- vous sauvegarder les mots de passe générés (o/n)? : ";
                     cin >> saveChoice;
+                    cin.ignore();
                     if (saveChoice == 'o' || saveChoice == 'O')
                     {
                         for (int i =0; i < results.size(); ++i)
+                        {
                             savePassword(results[i].password, i+1);
+                            cout << "Où comptez-vous utiliser le mot de passe #" << i+1 << " ?\n";
+                            cout << "Donner une description claire pour vous en souvenir plus tard. Nous la sauvegarderont dans votre historique : " << endl;
+                            getline(cin, usingContext);
+                            savePasswordWithContextAndTime(results[i].password, usingContext, i+1);
+
+                        }
                     }
                     else if (saveChoice == 'n' || saveChoice == 'N')
                     {
                         cout <<" Vos mots de passe ne seraont pas sauvegardés. Vous ne pourrez plus avoir accès à eux en cas de besoin"<<endl;
                         cout << "Êtes-vous sûr de ne pas vouloir sauvegarder les mots de passe (o/n) ? : ";
                         cin >> saveChoice;
+                        cin.ignore();
                         if (saveChoice == 'o' || saveChoice == 'O')
                         {
                             cout << "Sauvegarde non effectuée.";
@@ -415,7 +472,13 @@ int main()
                         else if (saveChoice == 'n' || saveChoice == 'N')
                         {
                             for (int i =0; i < results.size(); ++i)
+                            {
                                 savePassword(results[i].password, i+1);
+                                cout << "Où comptez-vous utiliser le mot de passe #"<< i+1 << " ?\n";
+                                cout << "Donner une description claire pour vous en souvenir plus tard. Nous la sauvegarderont dans votre historique : " << endl;
+                                getline(cin, usingContext);
+                                savePasswordWithContextAndTime(results[i].password, usingContext, i+1);
+                            }
                         }
                         else
                         {
@@ -428,7 +491,13 @@ int main()
                     else
                     {
                         for (int i =0; i < results.size(); ++i)
+                        {
                             savePassword(results[i].password, i+1);
+                            cout << "Où comptez-vous utiliser le mot de passe #"<< i+1 << " ?\n";
+                            cout << "Donner une description claire pour vous en souvenir plus tard. Nous la sauvegarderont dans votre historique : " << endl;
+                            getline(cin, usingContext);
+                            savePasswordWithContextAndTime(results[i].password, usingContext, i+1);
+                        }
                         cout << "Une erreur s'est produite : Vous devez entrer 'o' ou 'n'" << endl;
                         cout << "Les mots de passe ont été sauvegarder pour éviter tout risque. Vous pouver vider l'historique dans le menu\n";
                     }
