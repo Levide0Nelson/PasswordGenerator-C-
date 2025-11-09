@@ -5,7 +5,8 @@
 #include <algorithm>    // Pour le mélange avec std::shuffle
 #include <vector>
 #include <cmath>
-#include <utility>
+#include <windows.h>   // Pour l'encodage UTF-8
+#include <fstream>     // Pour la gestion du fichier de sauvegarde
 
 using namespace std;
 
@@ -150,7 +151,7 @@ vector<PasswordResult> generation(int const nbreDePassword )
 
     if (choice == 'o' || choice == 'O')
     {
-        for (int i = 0; i<nbreDePassword; ++i)
+        for (int i = 0; i < nbreDePassword; ++i)
         {
             do
             {
@@ -213,9 +214,9 @@ vector<PasswordResult> generation(int const nbreDePassword )
                 result.entropie = calculateEntropy(length, charSize);
                 result.laSuggestion = suggestion(result.entropie);
                 results.push_back(result);
-                return results;
             }
         }
+        return results;
 
     }
     else if (choice == 'n' || choice == 'N')
@@ -247,24 +248,82 @@ vector<PasswordResult> generation(int const nbreDePassword )
     }
 }
 
+void savePassword (const string& password, int index)
+{
+    ofstream fichier("passwords_Save.txt", ios::app); //mode ajout sans écrasement des données à l'ouverture du fichier de sauvegarde
+
+    if (fichier.is_open())
+    {
+        fichier << "Mot de passe #"<< index << " : " << password << endl;
+        fichier.close();
+        cout << "Mot(s) de passe sauvegardé(s) automatiquement avec succès.";
+    }
+    else
+        cerr << "Erreur : Impossible d'ouvrir le fichier de sauvegarde. Une erreur a dû se produire.\n";
+}
+
+void showPasswordSaved()
+{
+    ifstream fichier ("passwords_Save.txt");
+    if (fichier.is_open())
+    {
+        string ligne;
+        cout << "\n\t===HISTORIQUE DES MOTS DE PASSE GENERES===\t\n";
+        while (getline(fichier,ligne))
+        {
+            cout << ligne << endl;
+        }
+        fichier.close();
+    }
+    else
+    {
+        cerr << "Une Erreur s'est produite : Impossible d'ouvrir le fichier d'Historique.\n";
+    }
+}
+
+void deletePasswordSaved()
+{
+    char confirmation;
+    cout << "Êtes-vous sûr de vouloir vider le fichier ? (o/n) : ";
+    cin >> confirmation;
+
+    if (confirmation == 'o' || confirmation == 'O')
+    {
+        ofstream fichier ("passwords_Save.txt", ios::trunc);  // ouverture du fichier de sauvegarde en mode écrasement
+        if (fichier.is_open())
+        {
+            fichier.close();
+            cout << "Historique vidé avec succès.\n";
+        }
+        else
+        {
+            cerr << "Erreur : Impossible de vider le fichier d'Historique\n";
+        }
+    }
+    else
+        cout << "Opération annulée.\n";
+}
 
 
 // Fonction principale
 
 int main()
 {
+    SetConsoleOutputCP(CP_UTF7);  // Pour l'affichage avec l'encodage UNICODE afin de bien afficher les caractères accentués dans la console
 
     cout << "Bienvenu dans le générateur de mot de passe" << endl;
     cout << endl;
 
     int choice;
 
-    while (choice != 3)
+    while (choice != 5)
     {
         cout << "\n===MENU===\n";
         cout << "1. Générer un mot de passe.\n";
         cout << "2. Générer plusieurs mots de passe\n";
-        cout << "3. Quitter le programme\n";
+        cout << "3. Afficher l'historique des mots de passe générés.\n";
+        cout << "4. Supprimer l'historique des mots de passe générés.\n";
+        cout << "5. Quitter le programme\n";
         cout << endl;
         cout << "Votre choix : ";
         cin >> choice;
@@ -279,6 +338,38 @@ int main()
                     cout << "Mot de passe généré : " << results[0].password << endl;
                     cout << results[0].laSuggestion << endl;
                     cout << endl;
+                    static int i = 0;
+                    char saveChoice;
+                        cout << "Voulez- vous sauvegarder le mot de passe généré (o/n)? : ";
+                        cin >> saveChoice;
+                        if (saveChoice == 'o' || saveChoice == 'O')
+                        {
+                            savePassword(results[0].password, i+1);
+                        }
+                        else if (saveChoice == 'n' || saveChoice == 'N')
+                        {
+                             cout <<" Votre mot de passe ne sera pas sauvegardé. Vous ne pourrez plus avoir accès à lui en cas de besoin"<<endl;
+                             cout << "Êtes-vous sûr de ne pas vouloir sauvegarder le mot de passe (o/n) ? : ";
+                             cin >> saveChoice;
+                             if (saveChoice == 'o' || saveChoice == 'O')
+                             {
+                                 cout << "Sauvegarde non effectuée.";
+                             }
+                             else if (saveChoice == 'n' || saveChoice == 'N')
+                                    savePassword(results[0].password, i+1);
+                             else
+                             {
+                                 savePassword(results[0].password, i+1);
+                                 cout << "Une erreur s'est produite : Vous devez entrer 'o' ou 'n'" << endl;
+                                 cout << "Les mots de passe ont été sauvegarder pour éviter tout risque. Vous pouver vider l'historique dans le menu\n";
+                             }
+                        }
+                        else
+                        {
+                            savePassword(results[0].password, i+1);
+                            cout << "Une erreur s'est produite : Vous devez entrer 'o' ou 'n'" << endl;
+                            cout << "Les mots de passe ont été sauvegarder pour éviter tout risque. Vous pouver vider l'historique dans le menu\n";
+                        }
                     break;
                 }
 
@@ -294,17 +385,63 @@ int main()
                     vector <PasswordResult> results = generation(nbreDePassword);
 
                     for (int i =0; i < results.size(); ++i)
-                        {
-                            cout << "Mot de passe généré N°#" << (i+1) << " : " << results[i].password << endl;
-
-                            cout << results[i].laSuggestion << endl;
-                            cout << endl;
-                        }
+                    {
+                        cout << "Mot de passe généré N°#" << (i+1) << " : " << results[i].password << endl;
+                        cout << results[i].laSuggestion << endl;
                         cout << endl;
+                    }
+                    cout << endl;
+                    char saveChoice;
+                    cout << "Voulez- vous sauvegarder les mots de passe générés (o/n)? : ";
+                    cin >> saveChoice;
+                    if (saveChoice == 'o' || saveChoice == 'O')
+                    {
+                        for (int i =0; i < results.size(); ++i)
+                            savePassword(results[i].password, i+1);
+                    }
+                    else if (saveChoice == 'n' || saveChoice == 'N')
+                    {
+                        cout <<" Vos mots de passe ne seraont pas sauvegardés. Vous ne pourrez plus avoir accès à eux en cas de besoin"<<endl;
+                        cout << "Êtes-vous sûr de ne pas vouloir sauvegarder les mots de passe (o/n) ? : ";
+                        cin >> saveChoice;
+                        if (saveChoice == 'o' || saveChoice == 'O')
+                        {
+                            cout << "Sauvegarde non effectuée.";
+                        }
+                        else if (saveChoice == 'n' || saveChoice == 'N')
+                        {
+                            for (int i =0; i < results.size(); ++i)
+                                savePassword(results[i].password, i+1);
+                        }
+                        else
+                        {
+                            for (int i =0; i < results.size(); ++i)
+                                savePassword(results[i].password, i+1);
+                            cout << "Une erreur s'est produite : Vous devez entrer 'o' ou 'n'" << endl;
+                            cout << "Les mots de passe ont été sauvegarder pour éviter tout risque. Vous pouver vider l'historique dans le menu\n";
+                        }
+                    }
+                    else
+                    {
+                        for (int i =0; i < results.size(); ++i)
+                            savePassword(results[i].password, i+1);
+                        cout << "Une erreur s'est produite : Vous devez entrer 'o' ou 'n'" << endl;
+                        cout << "Les mots de passe ont été sauvegarder pour éviter tout risque. Vous pouver vider l'historique dans le menu\n";
+                    }
+
                     break;
                 }
-
             case 3 :
+            {
+                showPasswordSaved();
+                break;
+            }
+            case 4:
+                {
+                    deletePasswordSaved();
+                    break;
+                }
+            case 5 :
                 {
                     cout << "Au revoir !" << endl;
                     break;
