@@ -334,6 +334,42 @@ void deletePasswordSaved()
         cout << "Opération annulée.\n";
 }
 
+void researchPasswordByKeyword()
+{
+    cout << "\t\tRecherche par mot-clé\t\t" << endl;
+    cin.ignore(); // Nettoyage du buffer. Essentiel pour utiliser getline()
+    string keyword;
+
+    cout << "Entrer le mot clé à rechercher : ";
+    getline(cin, keyword);
+
+    ifstream fichier("password_Saved_Context_and_Time.txt");
+
+    if (fichier.is_open())
+    {
+        string ligne;
+        bool found = false;
+        cout << "\n\t\t---Résultats de la recherche---\t\t\n";
+        while (getline(fichier, ligne))
+        {
+            if (ligne.find(keyword) != string::npos)
+            {
+                cout << ligne << endl;
+                found = true;
+            }
+        }
+        fichier.close();
+        if (!found)
+        {
+            cout << "Aucun mot de passe n'est associé au mot clé \"" << keyword << "\".\n";
+        }
+    }
+    else
+    {
+        cerr << "Une erreur s'est produite! Impossible d'ouvrir le fichier de sauvegarde.\n";
+    }
+}
+
 
 // Fonction principale
 
@@ -347,14 +383,15 @@ int main()
     int choice;
     string usingContext;
 
-    while (choice != 5)
+    while (choice != 6)
     {
         cout << "\n===MENU===\n";
         cout << "1. Générer un mot de passe.\n";
         cout << "2. Générer plusieurs mots de passe\n";
         cout << "3. Afficher l'historique des mots de passe générés.\n";
-        cout << "4. Supprimer l'historique des mots de passe générés.\n";
-        cout << "5. Quitter le programme\n";
+        cout << "4. Rechercher un mot de passe par mot-clé dans l'historique\n";
+        cout << "5. Supprimer l'historique des mots de passe générés.\n";
+        cout << "6. Quitter le programme\n";
         cout << endl;
         cout << "Votre choix : ";
         cin >> choice;
@@ -511,10 +548,14 @@ int main()
             }
             case 4:
                 {
+                    researchPasswordByKeyword();
+                }
+            case 5:
+                {
                     deletePasswordSaved();
                     break;
                 }
-            case 5 :
+            case 6 :
                 {
                     cout << "Au revoir !" << endl;
                     break;
