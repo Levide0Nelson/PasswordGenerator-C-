@@ -339,27 +339,54 @@ void researchPasswordByKeyword()
     cout << "\t\tRecherche par mot-clé\t\t" << endl;
     cin.ignore(); // Nettoyage du buffer. Essentiel pour utiliser getline()
     string keyword;
-    
+
     cout << "Entrer le mot clé à rechercher : ";
     getline(cin, keyword);
-    
+
     ifstream fichier("password_Saved_Context_and_Time.txt");
-    
+
     if (fichier.is_open())
     {
         string ligne;
-        bool found = false;
+        bool blocEnCours = false;
+        bool blocCorrespondant = false;
+        bool auMoinsUnBlocTrouve = false;
         cout << "\n\t\t---Résultats de la recherche---\t\t\n";
         while (getline(fichier, ligne))
         {
-            if (ligne.find(keyword) != string::npos)
+            // Détection du début d'un bloc (mot de passe + Horodatage + Contexte)
+            if (ligne.find("Mot de passe #") != string::npos)
+            {
+                blocEnCours = true;
+                blocCorrespondant = false;
+            }
+
+            // Vérifie si le mot clé est présent dans le bloc en cours
+            if (blocEnCours && ligne.find(keyword) != string::npos)
+            {
+                blocCorrespondant = true;
+            }
+
+            // Affiche le bloc si pertinent
+            if (blocCorrespondant)
             {
                 cout << ligne << endl;
-                found = true;
+            }
+
+            // Fin de bloc (ligne vide)
+            if (blocEnCours && ligne.empty())
+            {
+                if (blocCorrespondant)
+                {
+                    cout << endl;
+                    auMoinsUnBlocTrouve = true;
+                }
+                blocEnCours = false;
+                blocCorrespondant = false;
             }
         }
         fichier.close();
-        if (!found)
+        if (!auMoinsUnBlocTrouve)
         {
             cout << "Aucun mot de passe n'est associé au mot clé \"" << keyword << "\".\n";
         }
