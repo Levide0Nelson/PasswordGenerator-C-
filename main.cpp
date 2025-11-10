@@ -7,6 +7,7 @@
 #include <cmath>
 #include <windows.h>   // Pour l'encodage UTF-8
 #include <fstream>     // Pour la gestion du fichier de sauvegarde
+#include <vector>
 
 using namespace std;
 
@@ -157,30 +158,35 @@ vector<PasswordResult> generation(int const nbreDePassword )
             {
                 cout << "Longueur du mot de passe que vous voulez générer: ";
                 cin >> length;
+                cout << endl;
             } while (length <= 0);
 
             do
             {
                 cout << "Inclure des lettres miniscules ? (o/n) : ";
                 cin>> lower;
+                cout << endl;
             } while (lower !='o' && lower != 'O' && lower != 'n' && lower != 'N');
 
             do
             {
                 cout << "Inclure des lettres majuscules ? (o/n) : ";
                 cin >> upper;
+                cout << endl;
             }while (upper !='o' && upper != 'O' && upper != 'n' && upper != 'N');
 
             do
             {
                 cout << "Inclure des chiffres ? (o/n) : ";
                 cin >> digits;
+                cout << endl;
             }while (digits !='o' && digits != 'O' && digits != 'n' && digits != 'N');
 
             do
             {
                 cout << "Inclure des symboles ? (o/n) : ";
                 cin >> symbols;
+                cout << endl;
             }while (symbols !='o' && symbols != 'O' && symbols != 'n' && symbols != 'N');
 
             if ((lower == 'n' || lower == 'N') && (upper == 'n' || upper == 'N') && (digits == 'n' || digits == 'N') && (symbols == 'n' || symbols == 'N') )
@@ -229,6 +235,7 @@ vector<PasswordResult> generation(int const nbreDePassword )
             {
                 cout << "Longueur du mot de passe que vous voulez générer: ";
                 cin >> length;
+                cout << endl;
             } while (length <= 0);
 
             result.password = generatePassword(length);
@@ -284,6 +291,7 @@ void savePasswordWithContextAndTime(const string& password, const string& usingC
         fichier << "Mot de passe #" << index << " : " << password << "\n";
         fichier << "Créé le : " << horodatage << "\n";
         fichier <<  "Contexte de création : " << usingContext << "\n";
+        fichier << "\n";
         fichier.close();
     }
     else
@@ -314,7 +322,7 @@ void showPasswordSaved()
 void deletePasswordSaved()
 {
     char confirmation;
-    cout << "Êtes-vous sûr de vouloir vider le fichier ? (o/n) : ";
+    cout << "Êtes-vous sûr de vouloir vider le fichier de sauvegarde ? (o/n) : ";
     cin >> confirmation;
 
     if (confirmation == 'o' || confirmation == 'O')
@@ -351,26 +359,26 @@ void researchPasswordByKeyword()
         bool blocEnCours = false;
         bool blocCorrespondant = false;
         bool auMoinsUnBlocTrouve = false;
+        vector<string> lignes {""};
+
         cout << "\n\t\t---Résultats de la recherche---\t\t\n";
+
         while (getline(fichier, ligne))
         {
             // Détection du début d'un bloc (mot de passe + Horodatage + Contexte)
-            if (ligne.find("Mot de passe #") != string::npos)
-            {
+            if (ligne.find("Mot de passe #") != string::npos ) // Où string::npos est utilisé pour indiquer indiquer qu'une
+            {                                                                                                                   // opération de recherche sur une chaîne de caractère n'a pas trouvé de correspondance
                 blocEnCours = true;
                 blocCorrespondant = false;
+                lignes.clear();
             }
 
             // Vérifie si le mot clé est présent dans le bloc en cours
-            if (blocEnCours && ligne.find(keyword) != string::npos)
+            if (blocEnCours)
             {
-                blocCorrespondant = true;
-            }
-
-            // Affiche le bloc si pertinent
-            if (blocCorrespondant)
-            {
-                cout << ligne << endl;
+                lignes.push_back(ligne);
+                if ((ligne.find("Contexte de création : ") != string::npos && ligne.find(keyword) != string::npos) || (ligne.find("Créé le") != string::npos && ligne.find(keyword) != string::npos))
+                    blocCorrespondant = true;
             }
 
             // Fin de bloc (ligne vide)
@@ -378,15 +386,18 @@ void researchPasswordByKeyword()
             {
                 if (blocCorrespondant)
                 {
+                    for (const string& elmt : lignes)
+                        cout << elmt << endl;
                     cout << endl;
                     auMoinsUnBlocTrouve = true;
                 }
                 blocEnCours = false;
                 blocCorrespondant = false;
+                lignes.clear();
             }
         }
         fichier.close();
-        if (!auMoinsUnBlocTrouve)
+        if ( !auMoinsUnBlocTrouve )
         {
             cout << "Aucun mot de passe n'est associé au mot clé \"" << keyword << "\".\n";
         }
@@ -446,6 +457,7 @@ int main()
                             cout << "Donner une description claire pour vous en souvenir plus tard. Nous la sauvegarderont dans votre historique : " << endl;
                             getline(cin, usingContext);
                             savePasswordWithContextAndTime(results[0].password, usingContext, i+1);
+                            cout << endl;
                         }
                         else if (saveChoice == 'n' || saveChoice == 'N')
                         {
@@ -460,10 +472,12 @@ int main()
                              else if (saveChoice == 'n' || saveChoice == 'N')
                              {
                                  savePassword(results[0].password, i+1);
+                                 cout << endl;
                                  cout << "Où comptez-vous utiliser ce mot de passe ? \n";
                                  cout << "Donner une description claire pour vous en souvenir plus tard. Nous la sauvegarderont dans votre historique : " << endl;
                                  getline(cin, usingContext);
                                  savePasswordWithContextAndTime(results[0].password, usingContext, i+1);
+                                 cout << endl;
                              }
                              else
                              {
@@ -473,7 +487,7 @@ int main()
                                  getline(cin, usingContext);
                                  savePasswordWithContextAndTime(results[0].password, usingContext, i+1);
                                  cout << "Une erreur s'est produite : Vous devez entrer 'o' ou 'n'" << endl;
-                                 cout << "Les mots de passe ont été sauvegarder pour éviter tout risque. Vous pouver vider l'historique dans le menu\n";
+                                 cout << "Les mots de passe ont été sauvegarder pour éviter tout risque. Vous pouvez vider l'historique dans le menu\n";
                              }
                         }
                         else
@@ -502,7 +516,7 @@ int main()
 
                     for (int i =0; i < results.size(); ++i)
                     {
-                        cout << "Mot de passe généré N°#" << (i+1) << " : " << results[i].password << endl;
+                        cout << "Mot de passe généré N°# " << (i+1) << " : " << results[i].password << endl;
                         cout << results[i].laSuggestion << endl;
                         cout << endl;
                     }
@@ -516,8 +530,8 @@ int main()
                         for (int i =0; i < results.size(); ++i)
                         {
                             savePassword(results[i].password, i+1);
-                            cout << "Où comptez-vous utiliser le mot de passe #" << i+1 << " ?\n";
-                            cout << "Donner une description claire pour vous en souvenir plus tard. Nous la sauvegarderont dans votre historique : " << endl;
+                            cout << "\nOù comptez-vous utiliser le mot de passe #" << i+1 << " ?\n";
+                            cout << "Donnez une description claire pour vous en souvenir plus tard. Nous la sauvegarderont dans votre historique : " << endl;
                             getline(cin, usingContext);
                             savePasswordWithContextAndTime(results[i].password, usingContext, i+1);
 
@@ -531,24 +545,25 @@ int main()
                         cin.ignore();
                         if (saveChoice == 'o' || saveChoice == 'O')
                         {
-                            cout << "Sauvegarde non effectuée.";
+                            cout << "\nSauvegarde non effectuée.\n";
                         }
                         else if (saveChoice == 'n' || saveChoice == 'N')
                         {
                             for (int i =0; i < results.size(); ++i)
                             {
                                 savePassword(results[i].password, i+1);
-                                cout << "Où comptez-vous utiliser le mot de passe #"<< i+1 << " ?\n";
-                                cout << "Donner une description claire pour vous en souvenir plus tard. Nous la sauvegarderont dans votre historique : " << endl;
+                                cout << "\nOù comptez-vous utiliser le mot de passe #"<< i+1 << " ?\n";
+                                cout << "Donnez une description claire pour vous en souvenir plus tard. Nous la sauvegarderont dans votre historique : " << endl;
                                 getline(cin, usingContext);
                                 savePasswordWithContextAndTime(results[i].password, usingContext, i+1);
+                                cout << endl;
                             }
                         }
                         else
                         {
                             for (int i =0; i < results.size(); ++i)
                                 savePassword(results[i].password, i+1);
-                            cout << "Une erreur s'est produite : Vous devez entrer 'o' ou 'n'" << endl;
+                            cout << "\nUne erreur s'est produite : Vous devez entrer 'o' ou 'n'" << endl;
                             cout << "Les mots de passe ont été sauvegarder pour éviter tout risque. Vous pouver vider l'historique dans le menu\n";
                         }
                     }
@@ -557,12 +572,12 @@ int main()
                         for (int i =0; i < results.size(); ++i)
                         {
                             savePassword(results[i].password, i+1);
-                            cout << "Où comptez-vous utiliser le mot de passe #"<< i+1 << " ?\n";
-                            cout << "Donner une description claire pour vous en souvenir plus tard. Nous la sauvegarderont dans votre historique : " << endl;
+                            cout << "\nOù comptez-vous utiliser le mot de passe #"<< i+1 << " ?\n";
+                            cout << "Donnez une description claire pour vous en souvenir plus tard. Nous la sauvegarderont dans votre historique : " << endl;
                             getline(cin, usingContext);
                             savePasswordWithContextAndTime(results[i].password, usingContext, i+1);
                         }
-                        cout << "Une erreur s'est produite : Vous devez entrer 'o' ou 'n'" << endl;
+                        cout << "\nUne erreur s'est produite : Vous devez entrer 'o' ou 'n'" << endl;
                         cout << "Les mots de passe ont été sauvegarder pour éviter tout risque. Vous pouver vider l'historique dans le menu\n";
                     }
 
@@ -576,6 +591,7 @@ int main()
             case 4:
                 {
                     researchPasswordByKeyword();
+                    break;
                 }
             case 5:
                 {
