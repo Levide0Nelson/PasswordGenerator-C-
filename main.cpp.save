@@ -413,6 +413,14 @@ void deletePasswordSaved()
         cout << "Opération annulée.\n";
 }
 
+// Pour la conversion du mot de passe en minuscule pour la conversion quelque soit la caste 
+string toLower(const string& keyword)
+{
+    string upperKeyword = keyword;
+    transform(upperkeyword.begin(), upperKeyword.end(), upperKeyword.begin(), [](unsigned char c) {return tolower(c);})
+    return upperKeyword;
+}
+
 void researchPasswordByKeyword()
 {
     cout << "\t\tRecherche par mot-clé\t\t" << endl;
@@ -447,7 +455,7 @@ void researchPasswordByKeyword()
             if (blocEnCours)
             {
                 lignes.push_back(ligne);
-                if ((ligne.find("Contexte de création : ") != string::npos && ligne.find(keyword) != string::npos) || (ligne.find("Créé le") != string::npos && ligne.find(keyword) != string::npos))
+                if ((ligne.find("Contexte de création : ") != string::npos && ligne.find(toLower(keyword)) != string::npos) || (ligne.find("Créé le") != string::npos && ligne.find(toLower(keyword)) != string::npos))
                     blocCorrespondant = true;
             }
 
