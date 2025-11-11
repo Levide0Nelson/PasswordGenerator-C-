@@ -327,7 +327,7 @@ vector<PasswordResult> generation(int const nbreDePassword )
 // Fonction pour la création du fichier de sauvagarde des mots de passe générés (en cas de besoin) avec horodatage uniquement
 void savePassword (const string& password, int index)
 {
-    ofstream fichier("passwords_Save.txt", ios::app); //mode ajout sans écrasement des données à l'ouverture du fichier de sauvegarde
+    ofstream fichier("saves/passwords_Save.txt", ios::app); //mode ajout sans écrasement des données à l'ouverture du fichier de sauvegarde
 
     if (fichier.is_open())
     {
@@ -348,7 +348,7 @@ void savePassword (const string& password, int index)
 // Fonction pour création d'un fichier de sauvegarde avec horodatage et contexte d'utilisation du mot de passe généré par l'utilisateur
 void savePasswordWithContextAndTime(const string& password, const string& usingContext, int index)
 {
-    ofstream fichier("password_Saved_Context_and_Time.txt", ios::app);
+    ofstream fichier("saves/password_Saved_Context_and_Time.txt", ios::app);
     if (fichier.is_open())
     {
         // Obtention de l'heure et de la date courante
@@ -370,7 +370,7 @@ void savePasswordWithContextAndTime(const string& password, const string& usingC
 // Fonction pour l'affichage de l'historique des mots de passe sauvegardés dans le fichier de sauvegarde
 void showPasswordSaved()
 {
-    ifstream fichier ("password_Saved_Context_and_Time.txt");
+    ifstream fichier ("saves/password_Saved_Context_and_Time.txt");
     if (fichier.is_open())
     {
         string ligne;
@@ -398,7 +398,7 @@ void deletePasswordSaved()
 
     if (confirmation == 'o' || confirmation == 'O')
     {
-        ofstream fichier ("password_Saved_Context_and_Time.txt", ios::trunc);  // ouverture du fichier de sauvegarde en mode écrasement
+        ofstream fichier ("saves/password_Saved_Context_and_Time.txt", ios::trunc);  // ouverture du fichier de sauvegarde en mode écrasement
         if (fichier.is_open())
         {
             fichier.close();
@@ -421,7 +421,7 @@ void researchPasswordByKeyword()
     cout << "Entrer le mot clé à rechercher : ";
     getline(cin, keyword);
 
-    ifstream fichier("password_Saved_Context_and_Time.txt");
+    ifstream fichier("saves/password_Saved_Context_and_Time.txt");
 
     if (fichier.is_open())
     {
