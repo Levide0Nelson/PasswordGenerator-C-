@@ -20,3 +20,7 @@
 *.bak
 .DS_Store
 Thumbs.db
+
+# Fichiers de sauvegarde 
+password_Saved_Context_and_Time.txt
+passwords_Save.txt

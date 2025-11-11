@@ -7,7 +7,7 @@
 #include <cmath>
 #include <windows.h>   // Pour l'encodage UTF-8
 #include <fstream>     // Pour la gestion du fichier de sauvegarde
-#include <vector>
+#include <limits>
 
 using namespace std;
 
@@ -24,6 +24,69 @@ double calculateEntropy(int length, int charsetSize)
 {
     return length* log2(charsetSize);
 }
+
+// Fonction pour gérer les erreurs d'entrées de nombres
+int correctChoiceNumber(int minim, int maxi, int choice, string repetedPhrase)
+{
+    string stringChoice = to_string(choice);
+    while(true)
+    {
+
+        getline(cin, stringChoice);
+
+        try
+        {
+            choice = stoi(stringChoice);  // Convertion en entier
+        }
+        catch (...)
+        {
+            cout << "Entrée invalide. Veuillez entrer un nombre entre " << minim << " et " << maxi << endl;
+            cout << repetedPhrase;
+            continue;
+        }
+        if (choice < minim || choice >maxi)
+        {
+            cout << "Veuillez entrer un nombre entre " << minim << " et " << maxi << endl;
+            cout << repetedPhrase;
+        }
+        else
+        {
+            return choice;
+        }
+    }
+}
+
+// Fonction pour gérer les erreurs d'entrées booléennes
+char correctChoiceBoolean (char booleanChoice, string repeatedPhrase)
+{
+    string stringBooleanChoice(1,booleanChoice);
+    while (true)
+    {
+        getline(cin, stringBooleanChoice);
+
+        try
+        {
+            booleanChoice = stringBooleanChoice.at(0);
+        }
+        catch (...)
+        {
+            cout << "Veuillez entrez une des options pour continuer." << endl;
+            cout << repeatedPhrase;
+            continue;
+        }
+
+        if (booleanChoice != 'o' && booleanChoice != 'O' && booleanChoice != 'n' && booleanChoice != 'N')
+        {
+            cout << "Entrée invalide. Veuillez entrer les options \"o\" ou \"n\" pour continuer." << endl;
+            cout << repeatedPhrase;
+        }
+        else
+        {
+            return booleanChoice;
+        }
+    }
+}
+
 
 
 
@@ -147,8 +210,9 @@ vector<PasswordResult> generation(int const nbreDePassword )
     char lower, upper, digits, symbols, choice;
     vector<PasswordResult> results;
 
+    string repeatedPhrase = "Je préfère choisir moi même (o/n): ";
     cout << "Je préfère choisir moi même (o/n): ";
-    cin >> choice;
+    choice = correctChoiceBoolean(choice, repeatedPhrase);
 
     if (choice == 'o' || choice == 'O')
     {
@@ -156,36 +220,41 @@ vector<PasswordResult> generation(int const nbreDePassword )
         {
             do
             {
+                string repeatedPhrase = "Longueur du mot de passe que vous voulez générer: ";
                 cout << "Longueur du mot de passe que vous voulez générer: ";
-                cin >> length;
+                length = correctChoiceNumber(4,50,length, repeatedPhrase);
                 cout << endl;
             } while (length <= 0);
 
             do
             {
+                string repeatedPhrase = "Inclure des lettres miniscules ? (o/n) : ";
                 cout << "Inclure des lettres miniscules ? (o/n) : ";
-                cin>> lower;
+                lower = correctChoiceBoolean(lower, repeatedPhrase);
                 cout << endl;
             } while (lower !='o' && lower != 'O' && lower != 'n' && lower != 'N');
 
             do
             {
+                string repeatedPhrase = "Inclure des lettres majuscules ? (o/n) : ";
                 cout << "Inclure des lettres majuscules ? (o/n) : ";
-                cin >> upper;
+                upper = correctChoiceBoolean(upper, repeatedPhrase);
                 cout << endl;
             }while (upper !='o' && upper != 'O' && upper != 'n' && upper != 'N');
 
             do
             {
+                string repeatedPhrase = "Inclure des chiffres ? (o/n) : ";
                 cout << "Inclure des chiffres ? (o/n) : ";
-                cin >> digits;
+                digits = correctChoiceBoolean(digits, repeatedPhrase);
                 cout << endl;
             }while (digits !='o' && digits != 'O' && digits != 'n' && digits != 'N');
 
             do
             {
+                string repeatedPhrase = "Inclure des symboles ? (o/n) : ";
                 cout << "Inclure des symboles ? (o/n) : ";
-                cin >> symbols;
+                symbols = correctChoiceBoolean(symbols, repeatedPhrase);
                 cout << endl;
             }while (symbols !='o' && symbols != 'O' && symbols != 'n' && symbols != 'N');
 
@@ -233,9 +302,9 @@ vector<PasswordResult> generation(int const nbreDePassword )
 
             do
             {
+                string repeatedPhrase = "Longueur du mot de passe que vous voulez générer: ";
                 cout << "Longueur du mot de passe que vous voulez générer: ";
-                cin >> length;
-                cout << endl;
+                length = correctChoiceNumber(4,50,length,repeatedPhrase);
             } while (length <= 0);
 
             result.password = generatePassword(length);
@@ -322,8 +391,10 @@ void showPasswordSaved()
 void deletePasswordSaved()
 {
     char confirmation;
+
+    string repeatedPhrase = "Êtes-vous sûr de vouloir vider le fichier de sauvegarde ? (o/n) : ";
     cout << "Êtes-vous sûr de vouloir vider le fichier de sauvegarde ? (o/n) : ";
-    cin >> confirmation;
+    confirmation = correctChoiceBoolean(confirmation, repeatedPhrase);
 
     if (confirmation == 'o' || confirmation == 'O')
     {
@@ -345,7 +416,6 @@ void deletePasswordSaved()
 void researchPasswordByKeyword()
 {
     cout << "\t\tRecherche par mot-clé\t\t" << endl;
-    cin.ignore(); // Nettoyage du buffer. Essentiel pour utiliser getline()
     string keyword;
 
     cout << "Entrer le mot clé à rechercher : ";
@@ -419,7 +489,7 @@ int main()
     cout << endl;
 
     int choice;
-    string usingContext;
+    string usingContext, repeatedPhrase;
 
     while (choice != 6)
     {
@@ -431,8 +501,10 @@ int main()
         cout << "5. Supprimer l'historique des mots de passe générés.\n";
         cout << "6. Quitter le programme\n";
         cout << endl;
+        repeatedPhrase = "Votre choix : ";
         cout << "Votre choix : ";
-        cin >> choice;
+        choice = correctChoiceNumber(1,6,choice,repeatedPhrase);
+        cout << endl;
 
         switch (choice)
         {
@@ -447,9 +519,10 @@ int main()
                     static int i = 0;
 
                     char saveChoice;
+                        repeatedPhrase = "Voulez- vous sauvegarder le mot de passe généré (o/n)? : ";
                         cout << "Voulez- vous sauvegarder le mot de passe généré (o/n)? : ";
-                        cin >> saveChoice;
-                        cin.ignore();
+                        saveChoice = correctChoiceBoolean(saveChoice, repeatedPhrase);
+                        cout << endl;
                         if (saveChoice == 'o' || saveChoice == 'O')
                         {
                             savePassword(results[0].password, i+1);
@@ -461,10 +534,10 @@ int main()
                         }
                         else if (saveChoice == 'n' || saveChoice == 'N')
                         {
+                            repeatedPhrase = "Êtes-vous sûr de ne pas vouloir sauvegarder le mot de passe (o/n) ? : ";
                              cout <<" Votre mot de passe ne sera pas sauvegardé. Vous ne pourrez plus avoir accès à lui en cas de besoin"<<endl;
                              cout << "Êtes-vous sûr de ne pas vouloir sauvegarder le mot de passe (o/n) ? : ";
-                             cin >> saveChoice;
-                             cin.ignore();
+                             saveChoice = correctChoiceBoolean(saveChoice, repeatedPhrase);
                              if (saveChoice == 'o' || saveChoice == 'O')
                              {
                                  cout << "Sauvegarde non effectuée.";
@@ -506,10 +579,9 @@ int main()
             case 2 :
                 {
                     int nbreDePassword;
-
+                    repeatedPhrase = "Combien de mots de passe voulez-vous générer aujourd'hui ? \n";
                     cout << "Combien de mots de passe voulez-vous générer aujourd'hui ? " << endl;
-                    cin >> nbreDePassword;
-                    cin.ignore();  // pour vider le buffer
+                    nbreDePassword = correctChoiceNumber(1,100,nbreDePassword, repeatedPhrase);
                     cout << "Avant de continuer souhaitez-vous choisir les caractères qui seront inclus dans votre mot de passe généré ou préférez-vous qu'on le fasse à votre place ?";
                     cout << endl;
                     vector <PasswordResult> results = generation(nbreDePassword);
@@ -522,9 +594,9 @@ int main()
                     }
                     cout << endl;
                     char saveChoice;
+                    repeatedPhrase = "Voulez- vous sauvegarder les mots de passe générés (o/n)? : ";
                     cout << "Voulez- vous sauvegarder les mots de passe générés (o/n)? : ";
-                    cin >> saveChoice;
-                    cin.ignore();
+                    saveChoice = correctChoiceBoolean(saveChoice, repeatedPhrase);
                     if (saveChoice == 'o' || saveChoice == 'O')
                     {
                         for (int i =0; i < results.size(); ++i)
@@ -539,10 +611,10 @@ int main()
                     }
                     else if (saveChoice == 'n' || saveChoice == 'N')
                     {
+                        repeatedPhrase = "Êtes-vous sûr de ne pas vouloir sauvegarder les mots de passe (o/n) ? : ";
                         cout <<" Vos mots de passe ne seraont pas sauvegardés. Vous ne pourrez plus avoir accès à eux en cas de besoin"<<endl;
                         cout << "Êtes-vous sûr de ne pas vouloir sauvegarder les mots de passe (o/n) ? : ";
-                        cin >> saveChoice;
-                        cin.ignore();
+                        saveChoice = correctChoiceBoolean(saveChoice, repeatedPhrase);
                         if (saveChoice == 'o' || saveChoice == 'O')
                         {
                             cout << "\nSauvegarde non effectuée.\n";
@@ -604,7 +676,10 @@ int main()
                     break;
                 }
             default:
-                cout << "Choix invalide. Veuillez réessayer." << endl;
+                {
+                    cout << "Choix invalide. Veuillez réessayer." << endl;
+                    break;
+                }
         }
     }
 
